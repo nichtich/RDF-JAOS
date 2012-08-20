@@ -1,0 +1,9 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel=stylesheet type=text/css href="<% request.base %>css/jaos.css">
+  </head>
+  <body>
+    <% content %>
+  </body>
+</html>
