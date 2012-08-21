@@ -5,6 +5,7 @@ use 5.10.0;
 use File::ShareDir qw(dist_dir);
 use File::Spec::Functions qw(catfile);
 use Try::Tiny;
+use Log::Contextual qw(:log);
 
 use Plack::Builder;
 use parent 'Plack::Component';
@@ -35,14 +36,12 @@ sub prepare_app {
 
     # load ontologies
     my @files = <$data/*.ttl>;
-    $self->{ontologies} = [
+    $self->{ontologies} = [ 
         map { 
+            log_info { "load ontology file $_" };
             RDF::JAOS::Ontology->new( $_ )
         } @files
     ];
-
-    # TODO: log
-    # say STDERR @{$self->{ontologies}}.' ontology files';
 
     my ($templates, $static) = map {
         try { dist_dir('RDF-JAOS',$_) } || catfile('share',$_);
@@ -51,7 +50,6 @@ sub prepare_app {
     my $app = sub { return [404,[],['Not found']]; };
 
     $self->{app} = builder {
-
         enable 'Static',
             path => qr{\.(png|js|css)$},
             root => $static;
@@ -71,6 +69,7 @@ sub prepare_app {
 
 sub call {
     my $self = shift;
+
     $self->{app}->( @_ );
 }
 
