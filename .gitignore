@@ -1,3 +1,4 @@
+# Perl stuff
 blib/
 .build/
 _build/
@@ -13,3 +14,6 @@ META.yml
 MYMETA.yml
 nytprof.out
 pm_to_blib
+
+# local files
+data/

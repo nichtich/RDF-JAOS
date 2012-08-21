@@ -1,0 +1,54 @@
+body {
+  font-family: verdana, geneva, arial, sans-serif;
+}
+h1,h2,h3,h4 {
+  color:#006699;
+}
+h1,h2 {
+  border-bottom:1px solid #006699;
+}
+h3 {
+  border-bottom:1px dotted #006699;
+}
+h2 {
+  font-size: 150%;
+  margin:2em 0 1em;
+}
+h3 {
+  font-size: 135%;
+   margin:1.5em 0 1em;
+}
+h4 {
+  margin:1.5em 0em 0em 0em;
+  font-size: 115%;
+}
+a { text-decoration: none; }
+a:hover { text-decoration:underline; }
+.class, .property {
+}
+.note {
+  color: #666;
+}
+a.uri {
+  font-family:monospace;
+  color:#000000;
+}
+.uriline {
+  margin: 5px 0em 0em 0em;
+}
+a.rdfdial {
+  font-size: small;
+  color: #666;
+}
+
+.description {
+}
+
+dt {
+  font-weight: bold;
+}
+.footer {
+  border-top: 1px solid #006699;
+  margin-top: 2em;
+  color: #666;
+}

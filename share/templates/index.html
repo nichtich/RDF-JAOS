@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <title>Just Another Ontology Server</title>
+    <link rel="stylesheet" type="text/css" href="[% request.base %]css/jaos.css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  </head>
+  <h1>Just Another Ontology Server</h1>
+  [% IF ontologies.size %]
+    <ul>
+      [% FOREACH ont IN ontologies %]
+        <li>[% ont.source %]</li>
+      [% END %]
+    </ul>
+  [% ELSE %]
+    <p>Please add ontology files to the <code>data</code> directory!</p>
+  [% END %]
+   <div class="footer">
+    just another ontology server
+   </div>
+  </body>
+</html>
