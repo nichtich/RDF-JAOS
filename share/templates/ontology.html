@@ -1,0 +1,100 @@
+﻿<html>
+  <head>
+    <title>Just Another Ontology Server</title>
+    <link rel="stylesheet" type="text/css" href="[% request.base %]css/jaos.css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  </head>
+
+[% title = obase_dc_title %]
+[% description = obase.dc11_description %]
+
+<h1>[% obase.dc_title %]</h1>
+<p>[% description | html %]</p>
+
+<dl>
+  <dt>Namespace and prefix</dt>
+  <dd><a href="[% obase %]">[% obase %]</a> ([% prefix %])</dd>
+  <!-- TODO: download, last modification, version... -->
+</dl>
+
+[% classes = obase.graph.subjects('rdf:type','owl:Class') %]
+[% properties = obase.graph.subjects('rdf:type','rdf:Property') %]
+
+<h2>Table of Contents</h2>
+<ul>
+  [% IF classes %]
+    <li><a href="#classes">Classes</a> ([% classes.size %])</li>
+    <li><a href="#properties">Properties</a> ([% properties.size %])</li>
+    <!-- TODO
+    Object Properties (32)
+    Data Properties (26)
+    -->
+  [% END %]
+</ul>
+
+<!-- TODO: ToC -->
+
+[% IF classes %]
+  <h2 id="classes">Classes</h2>
+  [% FOREACH class IN classes %]
+    <h4 id="[% prefix %]">[% class %]</h4>
+    [% IF class.rdfs_comment OR class.rdfs_label %]
+      <p>[% class.rdfs_label %]: [% class.rdfs_comment | html %]</p>
+    [% END %]
+      [% class.ttlpre %]
+      [% super = class.rdfs_subClassOf_ %]
+      [% sub = class.rdfs_subClassOf_ %]
+      [% disjoint = class.owl_disjointWith_ %]
+      <dl>
+        <dt>Status</dt>
+        <dd>[% class.vs_term_status %]</dd>
+        [% IF super.size %]
+          <dt>⊆ Superclass[% IF super.size > 1 %]es[% END %]</dt>
+          <dd>[% super %]</dd>
+        [% END %]
+        [% IF sub.size %]
+          <dt>⊇ Subclass[% IF sub.size > 1 %]es[% END %]</dt>
+          <dd>[% sub %]</dd>
+        [% END %]
+        [% IF disjoint.size %]
+          <dt>≠ Disjoint with</dt>
+          <dd>[% disjoint %]</dd>
+        [% END %]
+      </dl>
+  [% END %]
+[% END %]
+
+[% IF properties %]
+  <h2 id="properties">Properties</h2>
+  [% FOREACH prop IN properties %]
+    <h4 id="[% prefix %]">[% prop %]</h4>
+    [% IF prop.rdfs_comment OR prop.rdfs_label %]
+      <p>[% prop.rdfs_label %]: [% prop.rdfs_comment | html %]</p>
+    [% END %]
+
+    [% super   = prop.rdfs_subPropertyOf_ %]
+    [% domain  = prop.rdfs_domain_ %]
+    [% range   = prop.rdfs_range_ %]
+    [% inverse = prop.owl_inverseOf %]
+
+    [% IF super.size %]
+      <dt>⊆ Super-properties</dt>
+      <dd>[% super %]</dd>
+    [% END %]
+    [% IF domain %]
+      <dt>↦ domain</dt>
+      <dd>...</dd>
+    [% END %]
+    [% IF range %]
+      <dt>⇥ range</dt>
+      <dd>...</dd>
+    [% END %]
+    [% IF inverse %]
+      <dt>⇄ inverse property</dt>
+      <dd>...</dd>
+    [% END %]
+  [% END %]
+[% END %]
+
+
+[% INCLUDE 'foot.html' %]

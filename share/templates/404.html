@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <title>Just Another Ontology Server</title>
+    <link rel="stylesheet" type="text/css" href="[% request.base %]css/jaos.css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  </head>
+  <h1>Not Found</h1>
+  <p><code>[% path | html %]</code> not found!</p>
+  [% IF prefix %]
+    <p>There is no ontology with prefix <b>[% prefix %]</b>.</p>
+  [% END %]
+
+[% INCLUDE 'foot.html' %]

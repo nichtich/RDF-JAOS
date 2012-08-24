@@ -13,6 +13,9 @@ my $app = RDF::JAOS->new(
 );
 
 builder {
+#    enable 'Debug';
+#    enable 'Debug::TemplateToolkit';  
+
     enable "SimpleLogger";
     enable "Log::Contextual", level => 'debug';
     $app;

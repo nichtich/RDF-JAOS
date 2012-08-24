@@ -7,15 +7,16 @@
   <h1>Just Another Ontology Server</h1>
   [% IF ontologies.size %]
     <ul>
-      [% FOREACH ont IN ontologies %]
-        <li>[% ont.source %]</li>
+      [% FOREACH o IN ontologies %]
+        [% prefix = o.key %]
+        <li>
+          <a href="[% prefix %]">[% prefix %]</a> [% o.value.source %]
+          [% o.value.uri %]
+        </li>
       [% END %]
     </ul>
   [% ELSE %]
     <p>Please add ontology files to the <code>data</code> directory!</p>
   [% END %]
-   <div class="footer">
-    just another ontology server
-   </div>
-  </body>
-</html>
+
+[% INCLUDE 'foot.html' %]
