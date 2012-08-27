@@ -6,12 +6,18 @@
   </head>
   <h1>Just Another Ontology Server</h1>
   [% IF ontologies.size %]
+  <p>
+    The following ontologies may be useful to make use of data:
+  </p>
     <ul>
       [% FOREACH o IN ontologies %]
+        [% ontology = o.value %]
         [% prefix = o.key %]
         <li>
-          <a href="[% prefix %]">[% prefix %]</a> [% o.value.source %]
-          [% o.value.uri %]
+          <a href="[% prefix %]">[% prefix %]</a>:
+          [% title = ontology.me.dc_title %]
+          [% IF !title; title = ontology.me.dct_title; END %]
+          [% title %]
         </li>
       [% END %]
     </ul>

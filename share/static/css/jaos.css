@@ -36,17 +36,40 @@ a.uri {
 .uriline {
   margin: 5px 0em 0em 0em;
 }
-a.rdfdial {
+.uriline a.small {
+  padding-left: 2em;
   font-size: small;
   color: #666;
 }
 
-.description {
-}
 
 dt {
-  font-weight: bold;
+    font-weight: bold;
 }
+dl.table-display {
+    float: left;
+    margin: 1em 0;
+    padding: 0;
+    width: 100%;
+}
+.table-display dt {
+    clear: left;
+    float: left;
+    width: 9em;
+    margin: 0;
+    padding: 5px;
+}
+.table-display dd {
+    float: left;
+    margin: 0;
+    padding: 5px;
+}
+
+.status-stable { color: #458B00 }
+.status-testing { color: #8B5742 }
+.status-unstable { color: #8B4500 }
+.status-archaic { color: #8B8378 }
+
 .footer {
   border-top: 1px solid #006699;
   margin-top: 2em;
