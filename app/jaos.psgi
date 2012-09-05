@@ -17,6 +17,6 @@ builder {
 #    enable 'Debug::TemplateToolkit';  
 
     enable "SimpleLogger";
-    enable "Log::Contextual", level => 'debug';
+    enable "Log::Contextual", level => $level;
     $app;
 }

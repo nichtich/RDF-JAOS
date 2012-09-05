@@ -17,3 +17,7 @@ pm_to_blib
 
 # local files
 data/
+
+# temporary file
+.*.swp
+*.bak

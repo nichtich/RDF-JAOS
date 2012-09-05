@@ -1,0 +1,13 @@
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+@base <http://example.org/> .
+
+<> a owl:Ontology ;
+    dct:title "example ontology" ;
+    owl:versionInfo "alpha version" .
+
+<Foo> a owl:Class .
+
+<Bar> a owl:Class .

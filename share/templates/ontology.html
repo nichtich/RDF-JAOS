@@ -1,25 +1,37 @@
 ﻿<html>
-  <head>
-    <title>Just Another Ontology Server</title>
-    <link rel="stylesheet" type="text/css" href="[% request.base %]css/jaos.css" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  </head>
-
 [% ograph = ontology.graph %]
 
 [% title       = ontology.me.dc_title %]
 [% IF !title; title = ontology.me.dct_title; END %]
 
 [% description = ontology.me.dc_description %]
-[% IF !description; description = ontology.me.dct_title; END %]
+[% IF !description; description = ontology.me.dct_description; END %]
+
+[% version = ontology.me.owl_versionInfo %]
+
+  <head>
+    <title>[% title | html %]</title>
+    <link rel="stylesheet" type="text/css" href="[% request.base %]css/jaos.css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  </head>
+
 
 <h1>[% title | html %]</h1>
-<p>[% description | html %]</p>
+[% IF description %]<p>[% description | html %]</p>[% END %]
 
 <dl>
   <dt>Namespace and prefix</dt>
   <dd><a href="[% ontology.base %]">[% ontology.base %]</a> 
       ([% ontology.prefix %])</dd>
+  [% IF version %]
+    <dt>Version</dt>
+    <dd>[% version %]</dd>
+  [% END %]
+  <dt>Download</dt>
+  <dd>
+    [% url = request.base _ ontology.prefix _ ".ttl" %]
+    <a href="[% url %]">[% url %]</a>
+  </dd>
   <!-- TODO: download, last modification, version... -->
 </dl>
 
@@ -27,21 +39,29 @@
 [% classes    = ograph.subjects('rdf:type','owl:Class') %]
 [% properties = ograph.subjects('rdf:type','rdf:Property') %]
 
+[% object_properties = ograph.subjects('rdf:type','owl:ObjectProperty') %]
+[% data_properties = ograph.subjects('rdf:type','owl:DatatypeProperty') %]
+
 <h2>Table of Contents</h2>
 <ul>
   [% IF classes %]
     <li><a href="#classes">Classes</a> ([% classes.size %])</li>
-    <li><a href="#properties">Properties</a> ([% properties.size %])</li>
-    <!-- TODO
-    Object Properties (32)
-    Data Properties (26)
-    -->
+  [% END %]
+  [% IF object_properties %]
+    <li><a href="#object-properties">Object Properties</a> ([% object_properties.size %])</li>
+  [% END %]
+  [% IF data_properties %]
+    <li><a href="#data-properties">Data Properties</a> ([% data_properties.size %])</li>
+  [% END %]
+  [% IF properties %]
+    <!--li><a href="#properties">Properties</a> ([% properties.size %])</li-->
   [% END %]
 </ul>
 
 [%# 
     Useful macros
 %]
+
 [% MACRO link(uri) BLOCK -%]
 [% islocal = uri.revs.size > 0 %]
   <a href="[% IF islocal -%]
@@ -49,24 +69,27 @@
     [%- ELSE -%][% uri -%]
   [%- END %]" title="[% uri %]">[% uri.qname %]</a>
 [%- END %]
+
 [% MACRO linklist(uris) FOREACH uri IN uris -%]
   [%- IF loop.prev %], [% END -%]
   [%- link(uri) -%]
 [%- END %]
-[% MACRO element(e) BLOCK %]
-  <h4 id="[% e.qname %]">[% e.qname %]</h4>
-  <p class="uriline">
+
+[% MACRO element(e) BLOCK -%]
+<h4 id="[% e.qname %]">[% e.qname %]</h4>
+<p class="uriline">
     <a class="uri" href="[% e %]">[% e %]</a>
-    [% qname = e.qname.split(':') %]
-    [% prefix = qname.first %]
-    [% IF prefix != ontology.prefix AND ontologies.$prefix %]
+    [%- qname = e.qname.split(':') -%]
+    [%- prefix = qname.first -%]
+    [%- IF prefix != ontology.prefix AND ontologies.$prefix %]
       <a href="[% prefix %]#[% prefix %]:[% qname.last %]" class="small">more</a>
-    [% END %]
-  </p>
-  [% IF e.rdfs_comment OR e.rdfs_label %]
-    <p><b>[% e.rdfs_label %]:</b> [% e.rdfs_comment | html %]</p>
-  [% END %]
-  [% e.ttlpre %]
+    [% END -%]
+</p>
+[%- IF e.rdfs_comment OR e.rdfs_label %]
+<p>[% IF e.rdfs_label %]<b>[% e.rdfs_label %]:</b> [% END -%] 
+   [%- e.rdfs_comment | html %]</p>
+[% END -%]
+  [%# e.ttlpre %]
 [% END %]
 
 
@@ -80,12 +103,12 @@
     [% disjoint = class.owl_disjointWith_ %]
     [% equiv    = class.owl_equivalentClass_ %]
     [% seealso  = class.rdfs_seeAlso_ %]
-    [% note     = class.skos_scopeNote %]
+    [% notes    = class.skos_scopeNote_ %]
     <div>
       <dl class="table-display">
         [% IF status %]
           <dt>Status</dt>
-          <dd class="status-[% status %]">[% status %]</dd>
+          <dd class="status status-[% status %]">[% status %]</dd>
         [% END %]
         [% IF equiv.size %]
            <dt>≡ Equivalent[% IF equiv.size > 1 %]es[% END %]</dt>
@@ -108,7 +131,7 @@
               (which no [% class.qname %] is)</dd>
           </dd>
         [% END %]
-        [% IF note %]
+        [% FOREACH note IN notes %]
           <dt class="note">note</dt>
           <dd class="note">[% note | html %]</dd>
         [% END %]
@@ -117,65 +140,81 @@
           <dd class="note">[% linklist(seealso) %]</dd>
         [% END %]
       </dl>
+      <div class='cleaner'>&nbsp;</div>
     </div>
   [% END %]
 [% END %]
 
-[% IF properties %]
-  <h2 id="properties">Properties</h2>
-  [% FOREACH prop IN properties %]
-    [% element(prop) %]
-    [% status   = prop.vs_term_status %]
-    [% super    = prop.rdfs_subPropertyOf_ %]
-    [% domain   = prop.rdfs_domain_ %]
-    [% range    = prop.rdfs_range_ %]
-    [% inverse  = prop.owl_inverseOf %]
-    [% disjoint = prop.owl_disjointWith_ %]
-    [% seealso  = prop.rdfs_seeAlso_ %]
-    [% note     = prop.skos_scopeNote %]
-    <div>
-      <dl class="table-display">
-        [% IF status %]
-          <dt>Status</dt>
-          <dd class="status-[% status %]">[% status %]</dd>
-        [% END %]
-        [% IF super.size %]
-          <dt>⊆ super</dt>
-          <dd>[% linklist(super) %]
-              (which is implied by having a [% prop.qname %])</dd>
-        [% END %]
-        [% IF domain %]
-          <dt>↦ domain</dt>
-          <dd>[% linklist(domain) %]
-              (which being a is implied by having a [% prop.qname %])</dd>
-        [% END %]
-        [% IF range %]
-          <dt>⇥ range</dt>
-          <dd>[% linklist(range) %]
-              (which every value of [% prop.qname %] is)</dd>
-        [% END %]
-        [% IF inverse %]
-          <dt>⇄ inverse property</dt>
-          <dd>[% linklist(inverse) %]</dd>
-        [% END %]
-        [% IF disjoint.size %]
-          <dt>≠ Disjoint</dt>
-          <dd>[% linklist(disjoint) %]
-              (which nothing can have together with [% class.qname %])</dd>
-          </dd>
-        [% END %]
-        [% IF note %]
-          <dt class="note">note</dt>
-          <dd class="note">[% note | html %]</dd>
-        [% END %]
-        [% IF seealso.size %]
-          <dt class="note">see also</dt>
-          <dd class="note">[% linklist(seealso) %]</dd>
-        [% END %]
-      </dl>
-    </div>
+[% MACRO show_property(prop) BLOCK %]
+[% element(prop) %]
+[% status   = prop.vs_term_status %]
+[% super    = prop.rdfs_subPropertyOf_ %]
+[% domain   = prop.rdfs_domain_ %]
+[% range    = prop.rdfs_range_ %]
+[% inverse  = prop.owl_inverseOf %]
+[% disjoint = prop.owl_disjointWith_ %]
+[% seealso  = prop.rdfs_seeAlso_ %]
+[% note     = prop.skos_scopeNote %]
+<div>
+  <dl class="table-display">
+    [% IF status %]
+      <dt>Status</dt>
+      <dd class="status-[% status %]">[% status %]</dd>
+    [% END %]
+    [% IF super.size %]
+      <dt>⊆ super</dt>
+      <dd>[% linklist(super) %]
+          (which is implied by having a [% prop.qname %])</dd>
+    [% END %]
+    [% IF domain %]
+      <dt>↦ domain</dt>
+      <dd>[% linklist(domain) %]
+          (which being a is implied by having a [% prop.qname %])</dd>
+    [% END %]
+    [% IF range %]
+      <dt>⇥ range</dt>
+      <dd>[% linklist(range) %]
+          (which every value of [% prop.qname %] is)</dd>
+    [% END %]
+    [% IF inverse %]
+      <dt>⇄ inverse property</dt>
+      <dd>[% linklist(inverse) %]</dd>
+    [% END %]
+    [% IF disjoint.size %]
+      <dt>≠ Disjoint</dt>
+      <dd>[% linklist(disjoint) %]
+          (which nothing can have together with [% class.qname %])</dd>
+      </dd>
+    [% END %]
+    [% IF note %]
+      <dt class="note">note</dt>
+      <dd class="note">[% note | html %]</dd>
+    [% END %]
+    [% IF seealso.size %]
+      <dt class="note">see also</dt>
+      <dd class="note">[% linklist(seealso) %]</dd>
+    [% END %]
+  </dl>
+  <div class='cleaner'>&nbsp;</div>
+</div>
+[% END %]
+
+[% IF object_properties %]
+  <div class='cleaner'>&nbsp;</div>
+  <h2 id="object-properties">Object Properties</h2>
+  [% FOREACH prop IN object_properties %]
+    [% show_property(prop) %]
   [% END %]
 [% END %]
 
+[% IF data_properties %]
+  <div class='cleaner'>&nbsp;</div>
+  <h2 id="data-properties">Data Properties</h2>
+  <p>Data properties link resources to literal values.</p>
+  [% FOREACH prop IN data_properties %]
+    [% show_property(prop) %]
+  [% END %]
+[% END %]
 
+<div class='cleaner'>&nbsp;</div>
 [% INCLUDE 'foot.html' %]

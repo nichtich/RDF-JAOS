@@ -5,11 +5,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   </head>
   <h1>Just Another Ontology Server</h1>
+
   [% IF ontologies.size %]
-  <p>
-    The following ontologies may be useful to make use of data:
-  </p>
-    <ul>
+   <p>The following ontologies may be useful:</p>
+   <ul>
       [% FOREACH o IN ontologies %]
         [% ontology = o.value %]
         [% prefix = o.key %]
