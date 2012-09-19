@@ -66,6 +66,8 @@ sub new {
     my $ns   = $args{namespaces};
        $ns ||= (ref $ns ? RDF::NS->new($ns) : { });
 
+    $args{base} ||= $ns->URI( $args{prefix} ) if $args{prefix};
+
     my $self = bless {
         source => $from,
         base   => $args{base},
@@ -79,15 +81,20 @@ sub new {
             $self->{base} //= $from;
         } else {
             $self->{file} = $from;
-            $self->{base} //= "file://$from";
+            my $base = $self->{base} // "file://$from";
             my $parser = RDF::Trine::Parser->guess_parser_by_filename( $from );
-            $parser->parse_file_into_model( $self->{base}, $from, $model );
+            $parser->parse_file_into_model( $base, $from, $model );
         }
     } catch {
         croak "failed to read ontology from $from: $_";
     };
 
     $self->{graph} = RDF::Lazy->new( rdf => $model, namespaces => $ns );
+
+    # TODO: try to get base URI from model
+    croak "Could not find URI base of ontology" unless $self->{base};
+    $self->{base} =~ s/#$//;
+
     $self->prefix( $args{prefix} );
 
     $self;

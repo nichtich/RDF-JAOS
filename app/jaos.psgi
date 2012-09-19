@@ -1,22 +1,24 @@
-use 5.10.0;
 use RDF::JAOS;
 use Plack::Builder;
+use v5.12;
 
 my $plack_env = $ENV{PLACK_ENV} || '';
+my $level = $plack_env ~~ ['development','debug'] ? 'trace' : 'warn';
 
-my $level = 'trace';
-#my $level = 'warn';
-#$level = 'debug' unless $plack_env eq 'development';
-#$level = 'trace' if $plack_env eq 'debug';
+my $app = RDF::JAOS->new( data => './data' );
 
-my $app = RDF::JAOS->new(
-);
-
-builder {
-#    enable 'Debug';
-#    enable 'Debug::TemplateToolkit';  
-
+$app = builder {
     enable "SimpleLogger";
     enable "Log::Contextual", level => $level;
     $app;
-}
+};
+
+# quick startup 
+do {
+    use HTTP::Request;
+    use HTTP::Message::PSGI;
+    my $env = req_to_psgi( HTTP::Request->new(GET => 'http://localhost/') );
+    $app->($env);
+};
+
+$app;

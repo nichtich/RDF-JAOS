@@ -6,7 +6,7 @@ use File::ShareDir qw(dist_dir);
 use File::Slurp qw(read_file);
 use File::Spec::Functions qw(catfile splitpath);
 use Try::Tiny;
-
+use IO::Dir;
 use Log::Contextual qw(:log);
 
 use Plack::Builder;
@@ -44,47 +44,36 @@ E<you> like.
 
 sub load_ontologies {
     my $self = shift;
+    $self->{ontologies} = { }; 
 
     my $data = $self->{data} || 'data';
-    $self->{ontologies} = { }; 
-    
-    unless( -d $data ) {
+    my $dir = IO::Dir->new($data) // do {
         log_error { "ontology data directory not found: $data" };
         return;
-    }
+    };
 
     log_info { "loading ontologies from $data" };
 
-    foreach my $file (<$data/*.ttl>) {
-        my ($v,$d,$f) = splitpath($file);
-        try {
-            log_info { "load ontology file $file" };
-            die "invalid prefix in filename\n" unless $f =~ /^([a-z]+[a-z0-9]+).ttl$/;
-            my $prefix = $1;
-            my $uri;
-            foreach( read_file( $file ) ) {
-                next unless /\@prefix\s+$prefix:\s+<(.+)>/;
-                $uri = $1;
-                last;
-            }
+    while (defined($file = $dir->read)) {
+        next unless $file  =~ /^([a-z][a-z0-9]*)\.(owl\.|rdf\.)?(ttl|rdf|xml|n3)$/;
+        my $prefix = $1;
 
-            $self->{ontologies}->{ $prefix } = RDF::JAOS::Ontology->new( 
-                from       => $file, 
+        try {
+            my $ontology = RDF::JAOS::Ontology->new( 
+                from       => $data.'/'.$file, 
                 prefix     => $prefix,
-                base       => $uri,
                 namespaces => $self->{namespaces},
             );
 
-            log_info { $self->{ontologies}->{$prefix}->graph->uri('dct:title') };
-            log_info { $self->{ontologies}->{$prefix}->me->dct_title };
+            log_info { "$file: ".($ontology->me->dct_title || $ontology->me->dc_title) };
 
+            $self->{ontologies}->{ $prefix } = $ontology;
         } catch {
             log_error { "failed to load ontology file $file: $_" };
         }
     }
 
 }
-
 
 sub prepare_app {
     my $self = shift;
@@ -96,10 +85,10 @@ sub prepare_app {
     $self->load_ontologies;
 
     # TODO: customize template directory
+
     my ($templates, $static) = map {
         try { dist_dir('RDF-JAOS',$_) } || catfile('share',$_);
     } qw(templates static);
-    
 
     $self->{app} = builder {
 
@@ -111,7 +100,7 @@ sub prepare_app {
             formats => {
                 html  => { type => 'text/html' },
                 xhtml => { type => 'application/xhtml+xml' },
-#                rdf   => { type => 'application/rdf+xml' },
+                rdf   => { type => 'application/rdf+xml' },
                 ttl   => { type => 'text/turtle' },
                 _     => { charset => 'utf-8' },
             },
@@ -136,7 +125,6 @@ sub prepare_app {
                 } elsif ( $path =~ qr{/([a-z]+[a-z0-9]+)} ) {
                     my $prefix = $1;
 
-
                     $env->{'tt.vars'}->{prefix} = $prefix;
 
                     my $ont = $self->{ontologies}->{$prefix};
@@ -148,8 +136,13 @@ sub prepare_app {
                     # serve ontology as file
                     if ( $format eq 'ttl' and $ont ) {
                         log_info { $ont->{file} };
-                        my $file = Plack::App::File->new( file => $ont->{file} );
-                        return $file->($env);
+                        if ($ont->{file} =~ /\.ttl/) {
+                            my $file = Plack::App::File->new( file => $ont->{file} );
+                            return $file->($env);
+                        } else {
+                            require RDF::Trine::Serializer;
+                            return [200,['Content-Type'=>'text/turtle'],[ $ont->graph->ttl ] ];
+                        }
                     }
                 }                
                 return $app->($env);
